@@ -148,7 +148,7 @@ class PlayerScoutApp(QMainWindow):
         self.valuation_edit.setPrefix("£")
         self.valuation_edit.setSuffix("m")
         self.valuation_edit.setEnabled(False)
-        self.my_club_check.toggled.connect(self.valuation_edit.setEnabled)
+        self.my_club_check.toggled.connect(self.valuation_edit.setDisabled)
         
         self.height_edit = QLineEdit()
         self.height_edit.setPlaceholderText("e.g., 6,1")
@@ -321,7 +321,7 @@ class PlayerScoutApp(QMainWindow):
                 self.player_name.text(),
                 position,
                 self.age_spin.value(),
-                self.valuation_edit.value() if self.my_club_check.isChecked() else "N/A",
+                self.valuation_edit.value() if self.my_club_check.isChecked()==False else "N/A",
                 self.height_edit.text(),
                 self.weight_spin.value(),
                 self.calculate_score(position)
