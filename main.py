@@ -142,13 +142,19 @@ class PlayerScoutApp(QMainWindow):
         self.age_spin.setRange(15, 45)
         self.age_spin.setValue(25)
         
+        # CHANGED: This checkbox now indicates if player is IN our club
         self.my_club_check = QCheckBox("Plays for my club")
+        
+        # Valuation should only be entered for players NOT in our club
+        self.valuation_label = QLabel("Valuation (for players not in club):")
         self.valuation_edit = QDoubleSpinBox()
         self.valuation_edit.setRange(0, 200)
         self.valuation_edit.setPrefix("£")
         self.valuation_edit.setSuffix("m")
-        self.valuation_edit.setEnabled(False)
-        self.my_club_check.toggled.connect(self.valuation_edit.setEnabled)
+        self.valuation_edit.setEnabled(True)  # Enabled by default for non-club players
+        
+        # Connect checkbox to enable/disable valuation field
+        self.my_club_check.toggled.connect(self.toggle_valuation_field)
         
         self.height_edit = QLineEdit()
         self.height_edit.setPlaceholderText("e.g., 6,1")
@@ -165,7 +171,7 @@ class PlayerScoutApp(QMainWindow):
         info_layout.addRow("Position:", self.position_combo)
         info_layout.addRow("Age:", self.age_spin)
         info_layout.addRow(self.my_club_check)
-        info_layout.addRow("Valuation:", self.valuation_edit)
+        info_layout.addRow(self.valuation_label, self.valuation_edit)
         info_layout.addRow("Height (ft,in):", self.height_edit)
         info_layout.addRow("Weight:", self.weight_spin)
         info_layout.addRow("Verdict:", self.verdict_edit)
@@ -201,6 +207,16 @@ class PlayerScoutApp(QMainWindow):
         self.submit_btn.clicked.connect(self.submit_player)
         self.clear_btn.clicked.connect(self.clear_form)
     
+    def toggle_valuation_field(self, checked):
+        """Enable/disable valuation field based on club status"""
+        # If player is in our club (checked), disable valuation field
+        # If player is NOT in our club (unchecked), enable valuation field
+        self.valuation_edit.setEnabled(not checked)
+        
+        # Clear valuation if player is in our club
+        if checked:
+            self.valuation_edit.setValue(0)
+    
     def update_attribute_fields(self, position):
         """Update attribute fields based on selected position"""
         # Clear existing fields
@@ -231,6 +247,7 @@ class PlayerScoutApp(QMainWindow):
         self.age_spin.setValue(25)
         self.my_club_check.setChecked(False)
         self.valuation_edit.setValue(0)
+        self.valuation_edit.setEnabled(True)  # Enable by default
         self.height_edit.clear()
         self.weight_spin.setValue(75)
         self.verdict_edit.clear()
@@ -296,12 +313,18 @@ class PlayerScoutApp(QMainWindow):
                 wb = self.create_position_workbook(position)
                 ws = wb.active
             
+            # Determine valuation based on club status
+            if self.my_club_check.isChecked():
+                valuation = "N/A"  # Player is in our club, no valuation needed
+            else:
+                valuation = self.valuation_edit.value()
+            
             # Prepare player data
             player_data = [
                 self.player_name.text(),
                 position,
                 self.age_spin.value(),
-                self.valuation_edit.value() if self.my_club_check.isChecked() else "N/A",
+                valuation,
                 self.height_edit.text(),
                 self.weight_spin.value(),
                 self.calculate_score(position)
@@ -336,6 +359,12 @@ class PlayerScoutApp(QMainWindow):
         position = self.position_combo.currentText()
         if position not in POSITION_CONFIG:
             QMessageBox.warning(self, "Error", "Invalid position selected")
+            return
+        
+        # Validate valuation for players not in club
+        if not self.my_club_check.isChecked() and self.valuation_edit.value() <= 0:
+            QMessageBox.warning(self, "Missing Valuation", 
+                               "Valuation is required for players not in your club")
             return
         
         # Save player
