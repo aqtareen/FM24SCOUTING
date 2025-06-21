@@ -1,6 +1,6 @@
 import sys
 import os
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QGroupBox, QLineEdit, QComboBox, QPushButton, QLabel, QCheckBox, 
@@ -148,7 +148,7 @@ class PlayerScoutApp(QMainWindow):
         self.valuation_edit.setPrefix("£")
         self.valuation_edit.setSuffix("m")
         self.valuation_edit.setEnabled(False)
-        self.my_club_check.toggled.connect(self.valuation_edit.setDisabled)
+        self.my_club_check.toggled.connect(self.valuation_edit.setEnabled)
         
         self.height_edit = QLineEdit()
         self.height_edit.setPlaceholderText("e.g., 6,1")
@@ -267,67 +267,47 @@ class PlayerScoutApp(QMainWindow):
         
         return round(total_score, 2)
     
-    def create_position_sheet(self, position):
-        """Create a new Excel file for a position with header structure"""
+    def create_position_workbook(self, position):
+        """Create a new Excel workbook for a position"""
         config = POSITION_CONFIG[position]
         wb = Workbook()
         ws = wb.active
         ws.title = "Players"
         
-        # Write headers
+        # Create headers
         headers = ["Name", "Position", "Age", "Valuation", "Height", "Weight", "Total Score"]
-        
-        # Add attribute columns
-        for attr in config["attributes"]:
-            headers.append(attr)
-        
+        headers.extend(config["attributes"].keys())
         headers.append("Verdict")
         
         ws.append(headers)
-        
-        # Save and close
-        wb.save(config["filename"])
-        return config["filename"]
+        return wb
     
     def save_player(self, position):
         """Save player data to position-specific Excel file"""
         config = POSITION_CONFIG[position]
         filename = config["filename"]
         
-        # Create file if it doesn't exist
-        if not os.path.exists(filename):
-            self.create_position_sheet(position)
-        
         try:
-            wb = Workbook()
+            # Check if file exists
             if os.path.exists(filename):
                 wb = load_workbook(filename)
-            
-            # Get or create sheet
-            if "Players" in wb.sheetnames:
-                ws = wb["Players"]
-            else:
                 ws = wb.active
-                ws.title = "Players"
-                # Write headers if new sheet
-                headers = ["Name", "Position", "Age", "Valuation", "Height", "Weight", "Total Score"]
-                for attr in config["attributes"]:
-                    headers.append(attr)
-                headers.append("Verdict")
-                ws.append(headers)
+            else:
+                wb = self.create_position_workbook(position)
+                ws = wb.active
             
             # Prepare player data
             player_data = [
                 self.player_name.text(),
                 position,
                 self.age_spin.value(),
-                self.valuation_edit.value() if self.my_club_check.isChecked()==False else "N/A",
+                self.valuation_edit.value() if self.my_club_check.isChecked() else "N/A",
                 self.height_edit.text(),
                 self.weight_spin.value(),
                 self.calculate_score(position)
             ]
             
-            # Add attribute values
+            # Add attribute values in the correct order
             attributes = self.get_attribute_values()
             for attr in config["attributes"]:
                 if attr in attributes:
@@ -337,7 +317,7 @@ class PlayerScoutApp(QMainWindow):
             
             player_data.append(self.verdict_edit.text())
             
-            # Add player row
+            # Add new row
             ws.append(player_data)
             
             # Save workbook
