@@ -15,7 +15,7 @@ POSITION_CONFIG = {
             "Dribbling": 3, "Finishing": 5, "First Touch": 5, "Heading": 2.5, 
             "Long Shot": 2, "Passing": 3.5, "Technique": 3, "Aggression": 3.2,
             "Anticipation": 4.2, "Bravery": 3, "Composure": 4.2, "Concentration": 2.5,
-            "Decisions": 3.2, "Determination": 4, "Off the Ball": 5, "Teamwork": 2.5,
+            "Decisions": 3.2, "Determination": 4,"Flair": 1,"Leadership": 1.5, "Off the Ball": 5, "Teamwork": 2.5,
             "Vision": 3, "Work Rate": 3.5, "Acceleration": 4, "Agility": 3,
             "Balance": 3, "Jumping Reach": 1.5, "Natural Fitness": 2, "Pace": 3.5,
             "Stamina": 3.5, "Strength": 2.5
@@ -30,8 +30,8 @@ POSITION_CONFIG = {
             "Composure": 3.7, "Concentration": 1, "Decisions": 4.5, "Determination": 1,
             "Flair": 4.5, "Leadership": 1.5, "Off the Ball": 5, "Positioning": 0,
             "Teamwork": 4, "Vision": 5, "Work Rate": 5, "Acceleration": 3.5,
-            "Agility": 3.5, "Balance": 1, "Natural Fitness": 0, "Pace": 2,
-            "Stamina": 3, "Strength": 1
+            "Agility": 3.5, "Balance": 1, "Natural Fitness": 2, "Pace": 3,
+            "Stamina": 5, "Strength": 1
         },
         "filename": "ATTMID_players.xlsx"
     },
@@ -104,7 +104,7 @@ POSITION_CONFIG = {
             "Aerial Reach": 4.5, "Command of Area": 4, "Communication": 3, 
             "Eccentricity": -1, "First Touch": 2.5, "Handling": 3, "Kicking": 3.2,
             "One on Ones": 5, "Passing": 3.5, "Punching": 1, "Reflexes": 5, 
-            "Rushing": 4, "Throwing": 3.2, "Anticipation": 3.5, "Bravery": 1, 
+            "Rushing": 4, "Throwing": 3.2, "Aggression": -1, "Anticipation": 3.5, "Bravery": 1, 
             "Composure": 3, "Concentration": 3.5, "Decisions": 5, "Determination": 1,
             "Leadership": 1.5, "Positioning": 4, "Vision": 2, "Acceleration": 1,
             "Agility": 4.5, "Balance": 0, "Jumping Reach": 4.5, "Natural Fitness": 2,
