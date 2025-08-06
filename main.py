@@ -1,9 +1,10 @@
 import sys
 import os
+import parser
 from openpyxl import Workbook, load_workbook
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QGroupBox, QLineEdit, QComboBox, QPushButton, QLabel, QCheckBox, 
+    QGroupBox, QLineEdit, QComboBox, QPushButton, QLabel, QCheckBox, QFileDialog,
     QMessageBox, QScrollArea, QSpinBox, QDoubleSpinBox
 )
 from PyQt5.QtCore import Qt
@@ -189,10 +190,11 @@ class PlayerScoutApp(QMainWindow):
         button_layout = QHBoxLayout()
         self.submit_btn = QPushButton("Submit Player")
         self.clear_btn = QPushButton("Clear Form")
+        self.import_btn = QPushButton("Import Player")  
         
         button_layout.addWidget(self.submit_btn)
         button_layout.addWidget(self.clear_btn)
-        
+        button_layout.addWidget(self.import_btn)
         # Status label
         self.status_label = QLabel("Ready to scout players")
         self.status_label.setStyleSheet("color: gray; font-style: italic;")
@@ -206,7 +208,51 @@ class PlayerScoutApp(QMainWindow):
         # Connect signals
         self.submit_btn.clicked.connect(self.submit_player)
         self.clear_btn.clicked.connect(self.clear_form)
-    
+        self.import_btn.clicked.connect(self.import_player)
+
+    def import_player(self):
+        filepath, _ = QFileDialog.getOpenFileName(
+            self, "Open Player HTML", "", "HTML Files (*.html *.htm)"
+        )
+        
+        if not filepath:
+            return
+            
+        try:
+            player_data = parser.parse_player_html(filepath)
+            self.populate_form(player_data)
+            self.status_label.setText("Player attributes imported successfully!")
+        
+        except Exception as e:
+            QMessageBox.critical(self, "Import Error", f"Failed to import player:\n{str(e)}")
+            
+    def populate_form(self, player_data):
+        """Populate the form with imported player data"""
+        # Safely handle height and weight
+        if "height" in player_data:
+            self.height_edit.setText(str(player_data["height"]))
+        if "weight" in player_data:
+            try:
+                self.weight_spin.setValue(int(player_data["weight"]))
+            except (TypeError, ValueError):
+                pass  # Keep default if conversion fails
+
+        # Set position if provided
+
+        # Update attribute fields for the position
+        position = self.position_combo.currentText()
+        self.update_attribute_fields(position)
+
+        # Set attribute values
+        attributes = player_data.get("attributes", {})
+        for i in range(self.attributes_layout.count()):
+            item = self.attributes_layout.itemAt(i)
+            if item.widget() and isinstance(item.widget(), QSpinBox):
+                attr_name = item.widget().property("attribute")
+                if attr_name and attr_name in attributes:
+                    item.widget().setValue(attributes[attr_name])
+
+                
     def toggle_valuation_field(self, checked):
         """Enable/disable valuation field based on club status"""
         # If player is in our club (checked), disable valuation field
