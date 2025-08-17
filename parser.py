@@ -11,76 +11,104 @@ def parse_player_html(filepath: str) -> dict:
         "weight": 75  # Default weight
     }
     
-    # Extract height
-    height_row = soup.find("td", string="Height")
-    if height_row:
-        height_td = height_row.find_next_sibling("td")
-        if height_td:
-            height_value = height_td.text.strip()
-            # Convert to our format (6'0" -> "6,0")
-            if "'" in height_value:
-                feet, inches = height_value.split("'")
-                inches = inches.replace('"', '').strip()
-                player_data["height"] = f"{feet},{inches}" if inches else feet
+    # Extract height and weight from any table
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            tds = row.find_all("td")
+            
+            # Check for height row
+            if len(tds) >= 2 and "height" in tds[0].text.strip().lower():
+                height_value = tds[1].text.strip()
+                if "'" in height_value:
+                    feet, inches = height_value.split("'")
+                    inches = inches.replace('"', '').strip()
+                    player_data["height"] = f"{feet},{inches}" if inches else feet
+            
+            # Check for weight row
+            if len(tds) >= 2 and "weight" in tds[0].text.strip().lower():
+                weight_value = tds[1].text.strip()
+                if "kg" in weight_value:
+                    try:
+                        player_data["weight"] = int(weight_value.replace("kg", "").strip())
+                    except ValueError:
+                        pass
     
-    # Extract weight
-    weight_row = soup.find("td", string="Weight")
-    if weight_row:
-        weight_td = weight_row.find_next_sibling("td")
-        if weight_td:
-            weight_value = weight_td.text.strip()
-            if "kg" in weight_value:
-                player_data["weight"] = int(weight_value.replace("kg", "").strip())
-    
-    # Attribute mapping
+    # Attribute mapping with common variations
     attribute_map = {
-        "Corners": "Corners",
-        "Crossing": "Crossing",
-        "Dribbling": "Dribbling",
-        "Finishing": "Finishing",
-        "First Touch": "First Touch",
-        "Heading": "Heading",
-        "Long Shots": "Long Shot",
-        "Passing": "Passing",
-        "Technique": "Technique",
-        "Aggression": "Aggression",
-        "Anticipation": "Anticipation",
-        "Bravery": "Bravery",
-        "Composure": "Composure",
-        "Concentration": "Concentration",
-        "Decisions": "Decisions",
-        "Determination": "Determination",
-        "Flair": "Flair",
-        "Leadership": "Leadership",
-        "Off The Ball": "Off the Ball",
-        "Positioning": "Positioning",
-        "Teamwork": "Teamwork",
-        "Vision": "Vision",
-        "Work Rate": "Work Rate",
-        "Acceleration": "Acceleration",
-        "Agility": "Agility",
-        "Balance": "Balance",
-        "Jumping Reach": "Jumping Reach",
-        "Natural Fitness": "Natural Fitness",
-        "Pace": "Pace",
-        "Stamina": "Stamina",
-        "Strength": "Strength"
+        "corners": "Corners",
+        "crossing": "Crossing",
+        "dribbling": "Dribbling",
+        "finishing": "Finishing",
+        "first touch": "First Touch",
+        "heading": "Heading",
+        "long shots": "Long Shot",
+        "long throws": "Long Throws",
+        "marking": "Marking",
+        "passing": "Passing",
+        "penalty taking": "Penalty Taking",
+        "tackling": "Tackling",
+        "technique": "Technique",
+        "aggression": "Aggression",
+        "anticipation": "Anticipation",
+        "bravery": "Bravery",
+        "composure": "Composure",
+        "concentration": "Concentration",
+        "decisions": "Decisions",
+        "determination": "Determination",
+        "flair": "Flair",
+        "leadership": "Leadership",
+        "off the ball": "Off the Ball",
+        "positioning": "Positioning",
+        "teamwork": "Teamwork",
+        "vision": "Vision",
+        "work rate": "Work Rate",
+        "acceleration": "Acceleration",
+        "agility": "Agility",
+        "balance": "Balance",
+        "jumping reach": "Jumping Reach",
+        "natural fitness": "Natural Fitness",
+        "pace": "Pace",
+        "stamina": "Stamina",
+        "strength": "Strength",
+        "aerial reach": "Aerial Reach",
+        "command of area": "Command of Area",
+        "communication": "Communication",
+        "eccentricity": "Eccentricity",
+        "handling": "Handling",
+        "kicking": "Kicking",
+        "one on ones": "One on Ones",
+        "punching": "Punching",
+        "reflexes": "Reflexes",
+        "rushing": "Rushing",
+        "throwing": "Throwing"
     }
     
     # Extract attributes from tables
-    tables = soup.find_all("table")
-    for table in tables:
-        rows = table.find_all("tr")[1:]  # Skip header row
-        for row in rows:
+    for table in soup.find_all("table"):
+        # Skip empty tables
+        if not table.find("tr"):
+            continue
+            
+        # Process each row
+        for row in table.find_all("tr")[1:]:  # Skip header row
             cols = row.find_all("td")
-            if len(cols) >= 3:
-                attr_name = cols[0].text.strip()
-                attr_value = cols[2].text.strip()
+            if len(cols) < 2:
+                continue
                 
-                # Map to our attribute names
-                if attr_name in attribute_map:
-                    norm_name = attribute_map[attr_name]
-                    if attr_value.isdigit():
-                        player_data["attributes"][norm_name] = int(attr_value)
+            # Handle both 2-column and 3-column formats
+            if len(cols) == 3:
+                # Format: Attribute | ? | Value
+                attr_name = cols[0].text.strip().lower()
+                attr_value = cols[2].text.strip()
+            else:
+                # Format: Attribute | Value
+                attr_name = cols[0].text.strip().lower()
+                attr_value = cols[1].text.strip()
+            
+            # Map to normalized name
+            if attr_name in attribute_map:
+                norm_name = attribute_map[attr_name]
+                if attr_value.isdigit():
+                    player_data["attributes"][norm_name] = int(attr_value)
     
     return player_data
