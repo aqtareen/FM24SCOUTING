@@ -149,7 +149,7 @@ class PlayerScoutApp(QMainWindow):
         # Valuation should only be entered for players NOT in our club
         self.valuation_label = QLabel("Valuation (for players not in club):")
         self.valuation_edit = QDoubleSpinBox()
-        self.valuation_edit.setRange(0, 200)
+        self.valuation_edit.setRange(0, 500)
         self.valuation_edit.setPrefix("£")
         self.valuation_edit.setSuffix("m")
         self.valuation_edit.setEnabled(True)  # Enabled by default for non-club players
